@@ -38,7 +38,7 @@ pipeline {
                             rm -rf package-lock.json
                             sudo npm install
                             sudo npm run build
-                            aws s3 cp build s3://www.bo-chen.click --recursive
+                            aws s3 cp out s3://www.bo-chen.click --recursive
                         '''
                 }
             }
