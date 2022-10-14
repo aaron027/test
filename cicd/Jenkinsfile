@@ -19,7 +19,7 @@ pipeline {
                             terraform init  -migrate-state
                             terraform validate
                             terraform plan -out=junglemeet.plan
-                            terraform apply junglemeet.plan
+                            terraform apply junglemeet.plan -lock=false
                         '''
                     }
                 }
