@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+    parameters {
+        booleanParam defaultValue: false, name: 'terraform_stage'
+        booleanParam defaultValue: false, name: 'deploy_S3'
+        booleanParam defaultValue: false, name: 'destroy_terraform'
+    }
+    options {
+        ansiColor('xterm')
+    }
+    stages{
+        stage('terraform stage') {
+            when {expression{return params.terraform_stage}}
+            steps {
+                withAWS(credentials: 'AWS_Credentials', region: 'us-east-1') {
+                    // some block
+                    dir('terraform') {
+                        sh '''
+                            terraform init  -migrate-state
+                            terraform validate
+                            terraform plan -out=junglemeet.plan
+                            terraform apply junglemeet.plan
+                        '''
+                    }
+                }
+            }
+        }
+         stage('deploy to S3') {
+            when {expression{return params.deploy_S3}}
+            steps {
+                withAWS(credentials: 'AWS_Credentials', region: 'us-east-1') {
+                    
+                     sh '''
+                            sudo npm cache clean -f
+                            sudo npm install -g n install n 
+                            sudo n stable
+                            rm -rf node_modules
+                            rm -rf package-lock.json
+                            sudo npm install
+                            sudo npm run build
+                            aws s3 cp build s3://www.bo-chen.click --recursive
+                        '''
+                }
+            }
+        } 
+        stage('destroy terraform') {
+            when {expression{return params.destroy_terraform}}
+            steps {
+                withAWS(credentials: 'AWS_Credentials', region: 'us-east-1') {
+                    // some block
+                    dir('terraform') {
+                        sh '''
+                            terraform init
+                            terraform destroy --auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+    }  
+    post {
+        // Clean after build
+        always {
+            cleanWs()
+        }
+    }  
+}
