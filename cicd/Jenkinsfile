@@ -18,8 +18,8 @@ pipeline {
                         sh '''
                             terraform init  -migrate-state
                             terraform validate
-                            terraform plan -out=junglemeet.plan
-                            terraform apply junglemeet.plan -lock=false
+                            terraform plan -lock=false
+                            terraform apply -auto-approve
                         '''
                     }
                 }
